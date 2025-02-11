@@ -1,12 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Proyecto_Compiladores
@@ -17,7 +12,6 @@ namespace Proyecto_Compiladores
         {
             InitializeComponent();
         }
-
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -32,21 +26,35 @@ namespace Proyecto_Compiladores
             {
                 MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
         }
-
 
         private string ExpandCharacterRanges(string regex)
         {
-            return Regex.Replace(regex, "\\[([a-zA-Z0-9])-([a-zA-Z0-9])\\]", match =>
+            // Expansión de rangos como [a-z], [A-Z], [0-9], [1-6], etc.
+            return Regex.Replace(regex, @"\[([^\]]+)\]", match =>
             {
-                char start = match.Groups[1].Value[0];
-                char end = match.Groups[2].Value[0];
+                string content = match.Groups[1].Value;
                 StringBuilder expanded = new StringBuilder();
-                for (char c = start; c <= end; c++)
+
+                // Manejar rangos como 1-6, a-z, A-Z, etc.
+                for (int i = 0; i < content.Length; i++)
                 {
-                    expanded.Append(c);
-                    if (c < end) expanded.Append("|");
+                    if (i + 2 < content.Length && content[i + 1] == '-')
+                    {
+                        char start = content[i];
+                        char end = content[i + 2];
+                        for (char c = start; c <= end; c++)
+                        {
+                            expanded.Append(c);
+                            if (c < end) expanded.Append("|");
+                        }
+                        i += 2; // Saltar el rango (por ejemplo, "1-6")
+                    }
+                    else
+                    {
+                        expanded.Append(content[i]);
+                        if (i < content.Length - 1) expanded.Append("|");
+                    }
                 }
                 return "(" + expanded.ToString() + ")";
             });
@@ -64,6 +72,7 @@ namespace Proyecto_Compiladores
                 {
                     char next = regex[i + 1];
 
+                    // Condiciones para agregar concatenación explícita (&)
                     if ((char.IsLetterOrDigit(c) || c == ')' || c == '*' || c == '?' || c == '+') &&
                         (char.IsLetterOrDigit(next) || next == '(' || next == '['))
                     {
@@ -78,16 +87,15 @@ namespace Proyecto_Compiladores
         {
             Dictionary<char, int> precedence = new Dictionary<char, int>
             {
-                {'|', 1},
-                {'&', 2}, // Concatenación explícita
-                {'*', 3},
-                {'?', 3},
-                {'+', 3}
+                {'|', 1},  // Unión
+                {'&', 2},  // Concatenación explícita
+                {'*', 3},  // Cerradura de Kleene
+                {'?', 3},  // Opcional
+                {'+', 3}   // Cerradura positiva
             };
 
             Stack<char> operators = new Stack<char>();
             StringBuilder output = new StringBuilder();
-            Stack<string> operandStack = new Stack<string>();
 
             for (int i = 0; i < infix.Length; i++)
             {
@@ -107,7 +115,7 @@ namespace Proyecto_Compiladores
                     {
                         output.Append(operators.Pop());
                     }
-                    operators.Pop();
+                    operators.Pop(); // Eliminar '(' de la pila
                 }
                 else if (precedence.ContainsKey(c))
                 {
@@ -119,6 +127,7 @@ namespace Proyecto_Compiladores
                 }
             }
 
+            // Vaciar la pila de operadores restantes
             while (operators.Count > 0)
             {
                 output.Append(operators.Pop());
@@ -128,4 +137,3 @@ namespace Proyecto_Compiladores
         }
     }
 }
-
