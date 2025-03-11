@@ -66,8 +66,9 @@ namespace Proyecto_Compiladores
                 MisTransiciones.Add(z);
 
             }
-            //y.MisTransiciones.RemoveAt(0);
-            i = MisTransiciones.ElementAt(MisTransiciones.Count() - 1).destino;
+            y.MisTransiciones.RemoveAt(0);
+            i = MisTransiciones.ElementAt(MisTransiciones.Count() - 1).destino; 
+
             foreach (Transition z in y.MisTransiciones)
             {
                 Transition s = new Transition(z.nombre, z.origen + i, z.destino + i);
@@ -94,9 +95,11 @@ namespace Proyecto_Compiladores
             }
             s = MisTransiciones.ElementAt(MisTransiciones.Count() - 1);
             y = MisTransiciones.ElementAt(1);
-            MisTransiciones.Add(new Transition(s.destino, y.origen));
+            MisTransiciones.Add(new Transition(s.destino, y.origen)); 
             MisTransiciones.Add(new Transition(s.destino, s.destino + 1));
             MisTransiciones.Add(new Transition(trancisionesAux.origen, s.destino + 1));
+            
+
         }
 
         public string Conecta(char x, int Origen)
@@ -195,7 +198,9 @@ namespace Proyecto_Compiladores
                 aux.MisTransiciones.Add(s);
 
             }
-            i = aux.MisTransiciones.ElementAt(aux.MisTransiciones.Count() - 1).destino;
+            i = aux.MisTransiciones.ElementAt(aux.MisTransiciones.Count() - 1).destino; 
+            
+
             s = aux.MisTransiciones.ElementAt(aux.MisTransiciones.Count() - 1);
 
             d = new Transition(trancisionesAux.origen, i + 1);
@@ -235,7 +240,8 @@ namespace Proyecto_Compiladores
                     ListaEstado.Add(t.destino);
                 }
             }
-            ListaEstado = ListaEstado.Distinct().ToList();
+            ListaEstado = ListaEstado.Distinct().ToList(); 
+           
         }
         public void LlenaListaEstados2()
         {

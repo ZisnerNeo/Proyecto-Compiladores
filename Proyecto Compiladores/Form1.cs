@@ -340,5 +340,246 @@ namespace Proyecto_Compiladores
                 }
             }
         }
+        //************************************************ AFD *************************************************************************
+        private void button3_Click(object sender, EventArgs e) // Boton AFD
+        {
+            dataGridView1.Rows.Clear();
+            dataGridView1.Columns.Clear();
+            AFN automata = ConvertToAFN(txtOutput.Text);
+            AFN automataafd = ConvertToAFD(automata);
+
+            automataafd.LlenaListaEstados2();
+            creartablaafd(automataafd, alfabeto);
+            NumAFD.Text = automataafd.ListaEstado2.Count.ToString();
+        }
+
+        private AFN ConvertToAFD(AFN automata)
+        {
+            AFN AFD = new  AFN ();
+            List<Transition> union = new List<Transition>();
+            List<AFN> DEstados = new List<AFN>();
+            List<Transition> Simbolos = new List<Transition>();
+            List<char> alfa = new List<char>();
+            int j = 0;
+            int cantidadTrans = 0;
+            List<AFN> aux = new List<AFN>();
+            bool flag = false;
+            DEstados.Add(new AFN(CEpsilon(automata, 0, 0), 'A'));
+            automata.LlenaListaEstados();
+
+            if (DEstados[0].ListaEstado.Contains(int.Parse(N_Estados.Text)))
+            {
+                DEstados[0].aceptados(DEstados[0].nombreEstado);
+            }
+
+
+            while (VisitadosDE(DEstados) == false)
+            {
+                DEstados[j].visitado = true;
+                for (int i = 0; i < DEstados[j].ListaEstado.Count; i++)
+                {
+                    Simbolos.AddRange(noTerminales(automata, DEstados[j].ListaEstado[i]));
+
+                }
+                foreach (Transition q in Simbolos)
+                {
+                    alfa.Add(q.nombre);
+
+                }
+                alfa = alfa.Distinct().ToList();
+
+
+                for (int k = 0; k < alfa.Count; k++)
+                {
+                    foreach (Transition x in Simbolos)
+                    {
+                        if (x.nombre == alfa[k])
+                        {
+                            // aux.Add( new Automata(CEpsilon(automata, x.destino,0), (char)(DEstados[j].nombreEstado + l)));
+                            aux.Add(new AFN(CEpsilon(automata, x.destino, 0), (char)(DEstados[DEstados.Count - 1].nombreEstado + 1)));
+                            cantidadTrans++;
+                        }
+                    }
+                    if (cantidadTrans > 1)
+                    {
+                        foreach (AFN s in aux)
+                        {
+                            union.AddRange(s.MisTransiciones);
+                        }
+                        union = union.Distinct().ToList();
+                        AFN aux1 = new AFN(union, aux[0].nombreEstado);
+                        foreach (AFN y in DEstados)
+                        {
+
+                            if (AFN.compararaut(y, aux1))
+                            {
+                                AFD.MisTransiciones.Add(new Transition(alfa[k], y.nombreEstado, DEstados[j].nombreEstado));
+                                flag = true;
+                            }
+                        }
+                        if (!flag)
+                        {
+
+                            AFD.MisTransiciones.Add(new Transition(alfa[k], aux[0].nombreEstado, DEstados[j].nombreEstado));
+                            DEstados.Add(aux1);
+                        }
+                    }
+                    else if (cantidadTrans == 1)
+                    {
+                        foreach (AFN y in DEstados)
+                        {
+
+                            if (AFN.compararaut(y, aux[0]))
+                            {
+                                AFD.MisTransiciones.Add(new Transition(alfa[k], y.nombreEstado, DEstados[j].nombreEstado));
+                                flag = true;
+                            }
+                        }
+                        if (!flag)
+                        {
+
+
+                            AFD.MisTransiciones.Add(new Transition(alfa[k], aux[0].nombreEstado, DEstados[j].nombreEstado));
+                            DEstados.Add(aux[0]);
+                        }
+                    }
+                    cantidadTrans = 0;
+                    union.Clear();
+                    aux.Clear();
+                }
+
+                j++;
+                flag = false;
+                Simbolos.Clear();
+            }
+            return AFD;///Cambiar
+        }
+
+        private void creartablaafd(AFN automata, List<char> alfabeto)
+        {
+            dataGridView1.Columns.Add("Estados", "Estados");
+            foreach (char datoColumna in alfabeto)
+            {
+                if (datoColumna == 'ε') break;
+                dataGridView1.Columns.Add(datoColumna.ToString(), datoColumna.ToString());
+            }
+            for (int i = 0; i < automata.ListaEstado2.Count; i++)
+            {
+                dataGridView1.Rows.Add(automata.ListaEstado2[i].ToString());
+            }
+
+            for (int i = 0; i < automata.ListaEstado2.Count; i++)
+            {
+                for (int j = 0; j < alfabeto.Count - 1; j++)
+                {
+                    char simbolo = alfabeto[j];
+                    dataGridView1.Rows[i].Cells[j + 1].Value = automata.Conecta2(simbolo, automata.ListaEstado2[i]);
+                }
+            }
+        }
+
+        private List<Transition> CEpsilon(AFN automata, int nombre, int i)
+        {
+            List<Transition> Estados = new List<Transition>();
+            List<Transition> Estados2 = new List<Transition>();
+            i++;
+
+            foreach (Transition t in automata.MisTransiciones)
+            {
+
+                if (t.nombre == 'ε' && t.origen == nombre)
+                {
+                    Estados.Add(t);
+                }
+            }
+
+            foreach (Transition t in Estados)
+            {
+
+                Estados2.AddRange(CEpsilon(automata, t.destino, i));
+            }
+
+            Estados.AddRange(Estados2);
+            if (Estados.Count == 0 && i == 1)
+            {
+                foreach (Transition t in automata.MisTransiciones)
+                {
+
+                    if (t.nombre != 'ε' && t.origen == nombre)
+                    {
+                        t.Unitario = true;
+                        Estados.Add(t);
+
+                        break;
+                    }
+                }
+            }
+            if (Estados.Count == 0 && i == 1)
+            {
+                foreach (Transition t in automata.MisTransiciones)
+                {
+
+                    if (t.nombre != 'ε' && t.destino == nombre)
+                    {
+                        t.Unitario = false;
+                        t.UnitarioTP2 = true;
+                        Estados.Add(t);
+
+                        break;
+                    }
+                }
+            }
+
+            if (Estados.Count == 0 && i == 1)
+            {
+                foreach (Transition t in automata.MisTransiciones)
+                {
+
+                    if (t.nombre != 'ε' && t.destino == nombre)
+                    {
+                        Estados.Add(t);
+                        break;
+                    }
+                }
+            }
+
+            return Estados;
+        }
+
+        private bool VisitadosDE(List<AFN> DEstados)
+        {
+
+            foreach (AFN t in DEstados)
+            {
+                if (t.visitado == false)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private List<Transition> noTerminales(AFN automata, int nombre)
+        {
+            List<Transition> Estados = new List<Transition>();
+            List<Transition> Estados2 = new List<Transition>();
+
+            foreach (Transition t in automata.MisTransiciones)
+            {
+                if (t.nombre != 'ε' && t.origen == nombre)
+                {
+                    Estados.Add(t);
+                }
+            }
+
+            foreach (Transition t in Estados)
+            {
+                Estados2.AddRange(noTerminales(automata, t.destino));
+            }
+
+            Estados.AddRange(Estados2);
+            Estados = Estados.Distinct().ToList();
+            return Estados;
+        }
     }
 }
