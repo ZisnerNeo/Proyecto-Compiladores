@@ -66,8 +66,9 @@ namespace Proyecto_Compiladores
                 MisTransiciones.Add(z);
 
             }
-            y.MisTransiciones.RemoveAt(0);
+            //y.MisTransiciones.RemoveAt(0);
             i = MisTransiciones.ElementAt(MisTransiciones.Count() - 1).destino; 
+            
 
             foreach (Transition z in y.MisTransiciones)
             {
@@ -98,7 +99,7 @@ namespace Proyecto_Compiladores
             MisTransiciones.Add(new Transition(s.destino, y.origen)); 
             MisTransiciones.Add(new Transition(s.destino, s.destino + 1));
             MisTransiciones.Add(new Transition(trancisionesAux.origen, s.destino + 1));
-            
+      
 
         }
 
@@ -199,7 +200,6 @@ namespace Proyecto_Compiladores
 
             }
             i = aux.MisTransiciones.ElementAt(aux.MisTransiciones.Count() - 1).destino; 
-            
 
             s = aux.MisTransiciones.ElementAt(aux.MisTransiciones.Count() - 1);
 
@@ -241,7 +241,8 @@ namespace Proyecto_Compiladores
                 }
             }
             ListaEstado = ListaEstado.Distinct().ToList(); 
-           
+            
+
         }
         public void LlenaListaEstados2()
         {
