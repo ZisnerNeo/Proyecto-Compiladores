@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -580,6 +581,76 @@ namespace Proyecto_Compiladores
             Estados.AddRange(Estados2);
             Estados = Estados.Distinct().ToList();
             return Estados;
+        }
+
+        private void validar_Click(object sender, EventArgs e)
+        {
+            Valida.Text = "";
+            Valida.ForeColor = Color.Black;
+            char[] lex = lexema.Text.ToCharArray();
+            bool estado = false;
+
+            estado = AnalisisLexema(lex, 0, 0, 1);
+
+            if (estado == false)
+            {
+                Valida.Text = "Lexema no válido";
+                Valida.ForeColor = Color.Red;
+            }
+            else
+            {
+                Valida.Text = "Lexema válido";
+                Valida.ForeColor = Color.Green;
+            }
+        }
+        private bool AnalisisLexema(char[] cadena, int I, int origen, int tipo)
+        {
+            bool respuesta = false;
+            if (I >= cadena.Length)
+            {
+                tipo = 2;
+            }
+            foreach (Transition x in AFD.MisTransiciones)
+            {
+                if (respuesta == true)
+                {
+                    return respuesta;
+                }
+                if (tipo == 2)
+                {
+                    if (x.origen == origen && x.nombre == 'ε')
+                    {
+                        respuesta = AnalisisLexema(cadena, I, x.destino, tipo);
+                    }
+                }
+                else
+                {
+                    if (x.origen == origen && x.nombre == 'ε')
+                    {
+                        respuesta = AnalisisLexema(cadena, I, x.destino, tipo);
+                    }
+                    if (x.origen == origen && x.nombre == cadena[I])
+                    {
+                        respuesta = AnalisisLexema(cadena, I + 1, x.destino, tipo);
+                    }
+                }
+                if (origen == int.Parse(N_Estados.Text) - 1)
+                {
+                    if (I != cadena.Length)
+                    {
+                        return false;
+                    }
+                    else
+                        return true;
+                }
+
+            }
+            return respuesta;
+        }
+
+        private void lexema_TextChanged(object sender, EventArgs e)
+        {
+            Valida.Text = " ";
         }
     }
 }
