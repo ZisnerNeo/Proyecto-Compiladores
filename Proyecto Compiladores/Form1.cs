@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -651,6 +652,369 @@ namespace Proyecto_Compiladores
         private void lexema_TextChanged(object sender, EventArgs e)
         {
             Valida.Text = " ";
+        }
+
+        //Clasificacion de Lexemas 
+        private void clasificaTokenBtn_Click(object sender, EventArgs e)
+        {
+            ERRORLINE.Text = "";
+            string texto = tokensTxt.Text;
+            string idPosfija = ConvertToPostfix(ConvierteExplicita(identificadorTxt.Text));
+            AFN automataID = ConvertToAFN(idPosfija);
+            string idNUM = ConvertToPostfix(ConvierteExplicita(NumeroTxt.Text));
+            AFN automataNum = ConvertToAFN(idNUM);
+            ERRORLINE.Visible = false;
+            ERROR.Visible = false;
+            errorlexico = false;
+            // Obtener tokens
+            string[] palabras = texto.Split(new char[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+
+            List<string> listaPalabras = new List<string>(palabras);
+            int i = 0;
+            DataTable tablaTokens = new DataTable();
+            tablaTokens.Columns.Add("Nombre");
+            tablaTokens.Columns.Add("Token");
+
+            foreach (string token in listaPalabras)
+            {
+
+                if (palabraReservada.ContainsKey(token))
+                {
+                    tablaTokens.Rows.Add(token, token);
+                }
+                else if (simbolosEspeciales.ContainsKey(token))
+                {
+                    tablaTokens.Rows.Add(token, token);
+                }
+                else if (COMPRUEBALEXEMA2(token.ToCharArray(), 0, 0, 1, automataID))
+                {
+                    tablaTokens.Rows.Add(token, "identificador");
+                }
+                else if (COMPRUEBALEXEMA2(token.ToCharArray(), 0, 0, 1, automataNum))
+                {
+                    tablaTokens.Rows.Add(token, "número");
+                }
+                else
+                {
+                    errorlexico = true;
+                    tablaTokens.Rows.Add(token, "error");
+                    ERRORLINEA(i);
+                }
+                i++;
+            }
+            dataGridviewTokens.DataSource = tablaTokens;
+
+            foreach (DataGridViewRow fila in dataGridviewTokens.Rows)
+            {
+                // Obtener la celda de la segunda columna
+                DataGridViewCell celda = fila.Cells[1]; // Índice de la segunda columna
+
+                // Verificar si la celda contiene el texto "error" y establecer el color de fondo correspondiente
+                if (celda.Value != null && celda.Value.ToString().Equals("error", StringComparison.OrdinalIgnoreCase))
+                {
+                    celda.Style.ForeColor = Color.Red;
+                }
+                else
+                    celda.Style.ForeColor = Color.Green;
+            }
+        }
+
+
+        private int ClasificaTokens(string apuntador)
+        {
+            string texto = apuntador;
+            string idPosfija = ConvertToPostfix(ConvierteExplicita(identificadorTxt.Text));
+            AFN automataID = ConvertToAFN(idPosfija);
+            string idNUM = ConvertToPostfix(ConvierteExplicita(NumeroTxt.Text));
+            AFN automataNum = ConvertToAFN(idNUM);
+
+
+            if (COMPRUEBALEXEMA2(texto.ToCharArray(), 0, 0, 1, automataID))
+            {
+                return 1; // identificador
+            }
+            else if (COMPRUEBALEXEMA2(texto.ToCharArray(), 0, 0, 1, automataNum))
+            {
+                return 2; // numero
+            }
+
+            return -1;
+        }
+        private string ConvierteExplicita(string ER)
+        {
+            bool vacio = true;
+            bool AntDigito = false;
+            string explicito = "";
+
+            int j = 0;
+            for (int i = 0; i < ER.Length; i++)
+            {
+                char c = ER[i];
+
+                if (char.IsLetterOrDigit(c))
+                {
+                    if (vacio)
+                    {
+                        explicito += c;
+
+                        vacio = false;
+                    }
+                    else if (AntDigito)
+                    {
+                        explicito += "&" + c;
+
+                    }
+                    /*if(ER[i - 1] == ']' || ER[i - 1] == ']') {
+                        explicito += "&";
+                    }*/
+                    else
+                    {
+                        explicito += c;
+
+                    }
+                    AntDigito = true;
+                }
+                else
+                {
+                    switch (c)
+                    {
+                        case '*':
+                            explicito += c;
+                            AntDigito = true;
+                            break;
+                        case '+':
+                            explicito += c;
+                            AntDigito = true;
+                            break;
+                        case '?':
+                            explicito += c;
+                            AntDigito = true;
+                            break;
+                        case '|':
+                            explicito += c;
+                            AntDigito = false;
+                            vacio = true;
+                            break;
+                        case '[':
+                            j = i + 1;
+                            if (!vacio && ER[i - 1] != '(')
+                            {
+                                explicito += "&"; //
+                            }
+                            explicito += "(";
+                            if (char.IsLetter(ER[i + 1]) && ER[i + 2] != '-')
+                            {
+                                do
+                                {
+                                    explicito += ER[j];
+                                    if (ER[j + 1] != ']')
+                                    {
+                                        explicito += "|";
+                                    }
+                                    j++;
+                                } while (ER[j] != ']');
+                                i = j;
+                            }
+                            else if (ER[i + 2] == '-')
+                            {
+                                if (char.IsLetter(ER[i + 1]))
+                                {
+                                    for (char letra = ER[i + 1]; letra <= ER[i + 3]; letra++)
+                                    {
+                                        explicito += letra;
+                                        if (letra != ER[i + 3])
+                                        {
+                                            explicito += "|";
+                                        }
+                                    }
+
+                                }
+                                else
+                                {
+                                    for (int x = int.Parse(ER[i + 1].ToString()); x <= int.Parse(ER[i + 3].ToString()); x++)
+                                    {
+                                        explicito += x;
+                                        if (x != int.Parse(ER[i + 3].ToString()))
+                                        {
+                                            explicito += "|";
+                                        }
+
+                                    }
+                                }
+                                i += 4;
+                            }
+                            else if (char.IsLetterOrDigit(ER[i + 1]) && ER[i + 2] != '-')
+                            {
+                                do
+                                {
+                                    explicito += ER[j];
+                                    if (ER[j + 1] != ']')
+                                    {
+                                        explicito += "|";
+                                    }
+                                    j++;
+                                } while (ER[j] != ']');
+                                i = j;
+                            }
+                            explicito += ")";
+                            AntDigito = true;
+                            vacio = false;
+                            break;
+                        case '(':
+                            if (AntDigito)
+                            {
+                                explicito += "&";//
+                            }
+                            AntDigito = false;
+                            explicito += "(";
+                            j = i + 1;
+                            if (CompararParentesis(ER, i))
+                            {
+                                break;
+                            }
+                            if (char.IsLetter(ER[i + 1]) && ER[i + 2] != '-')
+                            {
+                                do
+                                {
+                                    explicito += ER[j];
+                                    if (ER[j + 1] != ')')
+                                    {
+                                        explicito += "&";//
+                                    }
+                                    j++;
+                                } while (ER[j] != ')');
+                                i = j;
+                            }
+                            else if (ER[i + 2] == '-')
+                            {
+                                if (char.IsLetter(ER[i + 1]))
+                                {
+                                    for (char letra = ER[i + 1]; letra <= ER[i + 3]; letra++)
+                                    {
+                                        explicito += letra;
+                                        if (letra != ER[i + 3])
+                                        {
+                                            explicito += "&";//
+                                        }
+                                    }
+
+                                }
+                                else
+                                {
+                                    for (int x = int.Parse(ER[i + 1].ToString()); x <= int.Parse(ER[i + 3].ToString()); x++)
+                                    {
+                                        explicito += x;
+                                        if (x != int.Parse(ER[i + 3].ToString()))
+                                        {
+                                            explicito += "&";//
+                                        }
+
+                                    }
+
+                                }
+                                i += 4;
+                            }
+                            explicito += ")";
+                            AntDigito = true;
+                            vacio = false;
+                            break;
+                        case ')':
+                            explicito += ")";
+                            break;
+                        default:
+                            explicito += c;
+                            break;
+                    }
+                    //vacio = false;
+                }
+            }
+            return explicito;
+        }
+
+        private bool COMPRUEBALEXEMA2(char[] cadena, int I, int origen, int tipo, AFN AFD2)
+        {
+            bool respuesta = false;
+            if (I >= cadena.Length)
+            {
+                tipo = 2;
+            }
+            foreach (Transition x in AFD2.MisTransiciones)
+            {
+                if (respuesta == true)
+                {
+                    return respuesta;
+                }
+                if (tipo == 2)
+                {
+                    if (x.origen == origen && x.nombre == 'ε')
+                    {
+                        respuesta = COMPRUEBALEXEMA2(cadena, I, x.destino, tipo, AFD2);
+                    }
+                }
+                else
+                {
+                    if (x.origen == origen && x.nombre == 'ε')
+                    {
+                        respuesta = COMPRUEBALEXEMA2(cadena, I, x.destino, tipo, AFD2);
+                    }
+                    if (x.origen == origen && x.nombre == cadena[I])
+                    {
+                        respuesta = COMPRUEBALEXEMA2(cadena, I + 1, x.destino, tipo, AFD2);
+                    }
+                }
+                if (origen == ContarEstadosYtransi2(AFD2) - 1)
+                {
+                    if (I != cadena.Length)
+                    {
+                        return false;
+                    }
+                    else
+                        return true;
+                }
+
+            }
+            return respuesta;
+        }
+
+        private void ERRORLINEA(int UBI)
+        {
+            int linea = 0;
+            string[] LINEAS = tokensTxt.Lines;
+            List<string> tokensList = new List<string>();
+
+            foreach (string line in LINEAS)
+            {
+                linea++;
+                // Dividir la línea en tokens y añadirlos a la lista
+                string[] tokens = line.Split(new char[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                tokensList.AddRange(tokens);
+                ERROR.ForeColor = Color.Red;
+                ERRORLINE.ForeColor = Color.Red;
+                // Convertir la lista a un arreglo para verificar la longitud
+                if (tokensList.Count > UBI)
+                {
+
+                    ERRORLINE.Text += "Línea " + linea + ". " + tokensList[UBI] + " No se Reconoce" + "\n";
+                    ERROR.Text = "Se encontró uno o mas errores en el programa.";
+                    break;
+
+                }
+            }
+
+        }
+
+        public bool CompararParentesis(string ER, int x)
+        {
+
+            do
+            {
+                if (ER[x] == '+' || ER[x] == '?' || ER[x] == '*' || ER[x] == '|' || ER[x] == '[')
+                {
+                    return false;
+                }
+                x++;
+            } while (ER[x] == ')');
+            return true;
         }
     }
 }
