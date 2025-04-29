@@ -61,7 +61,7 @@ namespace Proyecto_Compiladores
             { ')', 4 },
 
         };
-            
+
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -357,7 +357,7 @@ namespace Proyecto_Compiladores
 
         private AFN ConvertToAFD(AFN automata)
         {
-            AFN AFD = new  AFN ();
+            AFN AFD = new AFN();
             List<Transition> union = new List<Transition>();
             List<AFN> DEstados = new List<AFN>();
             List<Transition> Simbolos = new List<Transition>();
@@ -658,7 +658,7 @@ namespace Proyecto_Compiladores
         private void clasificaTokenBtn_Click(object sender, EventArgs e)
         {
             ERRORLINE.Text = "";
-            string texto = tokensTxt.Text;
+            string texto = tokensTxt.Text; // Entra el codigo 
             string idPosfija = ConvertToPostfix(ConvierteExplicita(identificadorTxt.Text));
             AFN automataID = ConvertToAFN(idPosfija);
             string idNUM = ConvertToPostfix(ConvierteExplicita(NumeroTxt.Text));
@@ -686,11 +686,11 @@ namespace Proyecto_Compiladores
                 {
                     tablaTokens.Rows.Add(token, token);
                 }
-                else if (COMPRUEBALEXEMA2(token.ToCharArray(), 0, 0, 1, automataID))
+                else if (COMPRUEBALEXEMA(token.ToCharArray(), 0, 0, 1, automataID))
                 {
                     tablaTokens.Rows.Add(token, "identificador");
                 }
-                else if (COMPRUEBALEXEMA2(token.ToCharArray(), 0, 0, 1, automataNum))
+                else if (COMPRUEBALEXEMA(token.ToCharArray(), 0, 0, 1, automataNum))
                 {
                     tablaTokens.Rows.Add(token, "número");
                 }
@@ -719,27 +719,6 @@ namespace Proyecto_Compiladores
             }
         }
 
-
-        private int ClasificaTokens(string apuntador)
-        {
-            string texto = apuntador;
-            string idPosfija = ConvertToPostfix(ConvierteExplicita(identificadorTxt.Text));
-            AFN automataID = ConvertToAFN(idPosfija);
-            string idNUM = ConvertToPostfix(ConvierteExplicita(NumeroTxt.Text));
-            AFN automataNum = ConvertToAFN(idNUM);
-
-
-            if (COMPRUEBALEXEMA2(texto.ToCharArray(), 0, 0, 1, automataID))
-            {
-                return 1; // identificador
-            }
-            else if (COMPRUEBALEXEMA2(texto.ToCharArray(), 0, 0, 1, automataNum))
-            {
-                return 2; // numero
-            }
-
-            return -1;
-        }
         private string ConvierteExplicita(string ER)
         {
             bool vacio = true;
@@ -931,7 +910,7 @@ namespace Proyecto_Compiladores
             return explicito;
         }
 
-        private bool COMPRUEBALEXEMA2(char[] cadena, int I, int origen, int tipo, AFN AFD2)
+        private bool COMPRUEBALEXEMA(char[] cadena, int I, int origen, int tipo, AFN AFD2)
         {
             bool respuesta = false;
             if (I >= cadena.Length)
@@ -948,18 +927,18 @@ namespace Proyecto_Compiladores
                 {
                     if (x.origen == origen && x.nombre == 'ε')
                     {
-                        respuesta = COMPRUEBALEXEMA2(cadena, I, x.destino, tipo, AFD2);
+                        respuesta = COMPRUEBALEXEMA(cadena, I, x.destino, tipo, AFD2);
                     }
                 }
                 else
                 {
                     if (x.origen == origen && x.nombre == 'ε')
                     {
-                        respuesta = COMPRUEBALEXEMA2(cadena, I, x.destino, tipo, AFD2);
+                        respuesta = COMPRUEBALEXEMA(cadena, I, x.destino, tipo, AFD2);
                     }
                     if (x.origen == origen && x.nombre == cadena[I])
                     {
-                        respuesta = COMPRUEBALEXEMA2(cadena, I + 1, x.destino, tipo, AFD2);
+                        respuesta = COMPRUEBALEXEMA(cadena, I + 1, x.destino, tipo, AFD2);
                     }
                 }
                 if (origen == ContarEstadosYtransi2(AFD2) - 1)
@@ -1016,5 +995,98 @@ namespace Proyecto_Compiladores
             } while (ER[x] == ')');
             return true;
         }
+
+
+
+        //Cambios de LR0 6ta 
+        private void LR0Boton_Click(object sender, EventArgs e)
+        {
+            // Cargar gramática actualizada
+            List<Produccion> gramaticaTINY = new List<Produccion>
+    {
+        new Produccion("programa'", new List<string> { "programa" }),
+        new Produccion("programa", new List<string> { "secuencia-sent" }),
+        new Produccion("secuencia-sent", new List<string> { "secuencia-sent", ";", "sentencia" }),
+        new Produccion("secuencia-sent", new List<string> { "sentencia" }),
+        new Produccion("sentencia", new List<string> { "sent-if" }),
+        new Produccion("sentencia", new List<string> { "sent-repeat" }),
+        new Produccion("sentencia", new List<string> { "sent-assign" }),
+        new Produccion("sentencia", new List<string> { "sent-read" }),
+        new Produccion("sentencia", new List<string> { "sent-write" }),
+        new Produccion("sent-if", new List<string> { "if", "exp", "then", "secuencia-sent", "end" }),
+        new Produccion("sent-if", new List<string> { "if", "exp", "then", "secuencia-sent", "else", "secuencia-sent", "end" }),
+        new Produccion("sent-repeat", new List<string> { "repeat", "secuencia-sent", "until", "exp" }),
+        new Produccion("sent-assign", new List<string> { "identificador", ":=", "exp" }),
+        new Produccion("sent-read", new List<string> { "read", "identificador" }),
+        new Produccion("sent-write", new List<string> { "write", "exp" }),
+        new Produccion("exp", new List<string> { "exp-simple", "op-comp", "exp-simple" }),
+        new Produccion("exp", new List<string> { "exp-simple" }),
+        new Produccion("op-comp", new List<string> { "<" }),
+        new Produccion("op-comp", new List<string> { ">" }),
+        new Produccion("op-comp", new List<string> { "=" }),
+        new Produccion("exp-simple", new List<string> { "exp-simple", "opsuma", "term" }),
+        new Produccion("exp-simple", new List<string> { "term" }),
+        new Produccion("opsuma", new List<string> { "+" }),
+        new Produccion("opsuma", new List<string> { "-" }),
+        new Produccion("term", new List<string> { "term", "opmult", "factor" }),
+        new Produccion("term", new List<string> { "factor" }),
+        new Produccion("opmult", new List<string> { "*" }),
+        new Produccion("opmult", new List<string> { "/" }),
+        new Produccion("factor", new List<string> { "(", "exp", ")" }),
+        new Produccion("factor", new List<string> { "numero" }),
+        new Produccion("factor", new List<string> { "identificador" }),
+    };
+
+            // Construir autómata
+            LR0Parser parser = new LR0Parser(gramaticaTINY);
+            List<List<ElementoLR0>> estados = parser.ConstruirAutomataLR0();
+
+            // Preparar tabla
+            dataGridViewLR0.Rows.Clear();
+            dataGridViewLR0.Columns.Clear();
+            dataGridViewLR0.Columns.Add("Edo", "Edo");
+
+            HashSet<string> simbolos = new HashSet<string>();
+            foreach (var estado in estados)
+            {
+                foreach (var elem in estado)
+                {
+                    if (elem.Punto < elem.Produccion.Derecha.Count)
+                        simbolos.Add(elem.Produccion.Derecha[elem.Punto]);
+                }
+            }
+
+            var listaSimbolos = simbolos.OrderBy(s => s).ToList();
+            foreach (var simbolo in listaSimbolos)
+                dataGridViewLR0.Columns.Add(simbolo, simbolo);
+
+            // Llenar filas
+            for (int i = 0; i < estados.Count; i++)
+            {
+                var fila = new List<string> { $"I{i}" };
+                foreach (var simbolo in listaSimbolos)
+                {
+                    var destino = parser.Goto(estados[i], simbolo);
+                    int index = estados.FindIndex(estado => estado.Count == destino.Count && !estado.Except(destino).Any());
+                    fila.Add(index != -1 ? $"I{index}" : "");
+                }
+                dataGridViewLR0.Rows.Add(fila.ToArray());
+            }
+
+            // Mostrar conjuntos
+            textBoxEstadosLR0.Clear();
+            for (int i = 0; i < estados.Count; i++)
+            {
+                textBoxEstadosLR0.AppendText($"I{i} = {{\r\n");
+                foreach (var elem in estados[i])
+                {
+                    textBoxEstadosLR0.AppendText($"   {elem.MostrarElemento()}\r\n");
+                }
+                textBoxEstadosLR0.AppendText("}\r\n\r\n");
+            }
+
+            MessageBox.Show($"Generados {estados.Count} estados.", "Éxito");
+        }
+
     }
 }
