@@ -1080,7 +1080,7 @@ namespace Proyecto_Compiladores
                         terminales.Add(simbolo);
                 }
             }
-            
+            terminales.Add("$");
 
             // Agrega columnas para terminales en ACCIÓN
             foreach (string t in terminales)
