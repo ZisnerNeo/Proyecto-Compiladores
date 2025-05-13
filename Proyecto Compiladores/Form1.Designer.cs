@@ -59,11 +59,15 @@
             this.label10 = new System.Windows.Forms.Label();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.tabPage2 = new System.Windows.Forms.TabPage();
             this.Valida = new System.Windows.Forms.Label();
             this.NumAFD = new System.Windows.Forms.Label();
             this.N_Epsi = new System.Windows.Forms.Label();
             this.N_Estados = new System.Windows.Forms.Label();
+            this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.dataGridViewIrA = new System.Windows.Forms.DataGridView();
+            this.dataGridViewAccion = new System.Windows.Forms.DataGridView();
+            this.label11 = new System.Windows.Forms.Label();
+            this.label12 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridviewTokens)).BeginInit();
@@ -71,6 +75,8 @@
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewIrA)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewAccion)).BeginInit();
             this.SuspendLayout();
             // 
             // button1
@@ -324,7 +330,7 @@
             this.LR0Boton.Location = new System.Drawing.Point(597, 7);
             this.LR0Boton.Margin = new System.Windows.Forms.Padding(2);
             this.LR0Boton.Name = "LR0Boton";
-            this.LR0Boton.Size = new System.Drawing.Size(73, 19);
+            this.LR0Boton.Size = new System.Drawing.Size(129, 19);
             this.LR0Boton.TabIndex = 40;
             this.LR0Boton.Text = "ASA LR(0)";
             this.LR0Boton.UseVisualStyleBackColor = true;
@@ -338,15 +344,15 @@
             this.dataGridViewLR0.Name = "dataGridViewLR0";
             this.dataGridViewLR0.RowHeadersWidth = 51;
             this.dataGridViewLR0.RowTemplate.Height = 24;
-            this.dataGridViewLR0.Size = new System.Drawing.Size(1177, 301);
+            this.dataGridViewLR0.Size = new System.Drawing.Size(1434, 234);
             this.dataGridViewLR0.TabIndex = 41;
             // 
             // textBoxEstadosLR0
             // 
-            this.textBoxEstadosLR0.Location = new System.Drawing.Point(282, 335);
+            this.textBoxEstadosLR0.Location = new System.Drawing.Point(18, 268);
             this.textBoxEstadosLR0.Margin = new System.Windows.Forms.Padding(2);
             this.textBoxEstadosLR0.Name = "textBoxEstadosLR0";
-            this.textBoxEstadosLR0.Size = new System.Drawing.Size(584, 282);
+            this.textBoxEstadosLR0.Size = new System.Drawing.Size(275, 395);
             this.textBoxEstadosLR0.TabIndex = 42;
             this.textBoxEstadosLR0.Text = "";
             // 
@@ -367,7 +373,7 @@
             this.tabControl1.Location = new System.Drawing.Point(12, 72);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(1221, 665);
+            this.tabControl1.Size = new System.Drawing.Size(1485, 694);
             this.tabControl1.TabIndex = 46;
             // 
             // tabPage1
@@ -403,24 +409,10 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(1213, 639);
+            this.tabPage1.Size = new System.Drawing.Size(1477, 668);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Analisis Lexico";
             this.tabPage1.UseVisualStyleBackColor = true;
-            // 
-            // tabPage2
-            // 
-            this.tabPage2.Controls.Add(this.label10);
-            this.tabPage2.Controls.Add(this.dataGridViewLR0);
-            this.tabPage2.Controls.Add(this.textBoxEstadosLR0);
-            this.tabPage2.Controls.Add(this.LR0Boton);
-            this.tabPage2.Location = new System.Drawing.Point(4, 22);
-            this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(1213, 639);
-            this.tabPage2.TabIndex = 1;
-            this.tabPage2.Text = "Analisis Sintactico";
-            this.tabPage2.UseVisualStyleBackColor = true;
             // 
             // Valida
             // 
@@ -458,11 +450,71 @@
             this.N_Estados.Size = new System.Drawing.Size(0, 13);
             this.N_Estados.TabIndex = 40;
             // 
+            // tabPage2
+            // 
+            this.tabPage2.Controls.Add(this.label12);
+            this.tabPage2.Controls.Add(this.label11);
+            this.tabPage2.Controls.Add(this.dataGridViewIrA);
+            this.tabPage2.Controls.Add(this.dataGridViewAccion);
+            this.tabPage2.Controls.Add(this.label10);
+            this.tabPage2.Controls.Add(this.dataGridViewLR0);
+            this.tabPage2.Controls.Add(this.textBoxEstadosLR0);
+            this.tabPage2.Controls.Add(this.LR0Boton);
+            this.tabPage2.Location = new System.Drawing.Point(4, 22);
+            this.tabPage2.Name = "tabPage2";
+            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage2.Size = new System.Drawing.Size(1477, 668);
+            this.tabPage2.TabIndex = 1;
+            this.tabPage2.Text = "Analisis Sintactico";
+            this.tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // dataGridViewIrA
+            // 
+            this.dataGridViewIrA.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridViewIrA.Location = new System.Drawing.Point(900, 291);
+            this.dataGridViewIrA.Margin = new System.Windows.Forms.Padding(2);
+            this.dataGridViewIrA.Name = "dataGridViewIrA";
+            this.dataGridViewIrA.RowHeadersWidth = 51;
+            this.dataGridViewIrA.RowTemplate.Height = 24;
+            this.dataGridViewIrA.Size = new System.Drawing.Size(552, 372);
+            this.dataGridViewIrA.TabIndex = 47;
+            // 
+            // dataGridViewAccion
+            // 
+            this.dataGridViewAccion.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridViewAccion.Location = new System.Drawing.Point(297, 291);
+            this.dataGridViewAccion.Margin = new System.Windows.Forms.Padding(2);
+            this.dataGridViewAccion.Name = "dataGridViewAccion";
+            this.dataGridViewAccion.RowHeadersWidth = 51;
+            this.dataGridViewAccion.RowTemplate.Height = 24;
+            this.dataGridViewAccion.Size = new System.Drawing.Size(599, 372);
+            this.dataGridViewAccion.TabIndex = 46;
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(584, 271);
+            this.label11.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(47, 13);
+            this.label11.TabIndex = 48;
+            this.label11.Text = "ACCION";
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(1190, 271);
+            this.label12.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(26, 13);
+            this.label12.TabIndex = 49;
+            this.label12.Text = "Ir_A";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1268, 738);
+            this.ClientSize = new System.Drawing.Size(1524, 771);
             this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.label1);
             this.Margin = new System.Windows.Forms.Padding(2);
@@ -477,6 +529,8 @@
             this.tabPage1.PerformLayout();
             this.tabPage2.ResumeLayout(false);
             this.tabPage2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewIrA)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewAccion)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -520,6 +574,10 @@
         private System.Windows.Forms.Label NumAFD;
         private System.Windows.Forms.Label N_Epsi;
         private System.Windows.Forms.Label N_Estados;
+        private System.Windows.Forms.DataGridView dataGridViewIrA;
+        private System.Windows.Forms.DataGridView dataGridViewAccion;
+        private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.Label label11;
     }
 }
 

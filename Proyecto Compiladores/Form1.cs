@@ -1003,39 +1003,39 @@ namespace Proyecto_Compiladores
         {
             // Cargar gramática actualizada
             List<Produccion> gramaticaTINY = new List<Produccion>
-    {
-        new Produccion("programa'", new List<string> { "programa" }),
-        new Produccion("programa", new List<string> { "secuencia-sent" }),
-        new Produccion("secuencia-sent", new List<string> { "secuencia-sent", ";", "sentencia" }),
-        new Produccion("secuencia-sent", new List<string> { "sentencia" }),
-        new Produccion("sentencia", new List<string> { "sent-if" }),
-        new Produccion("sentencia", new List<string> { "sent-repeat" }),
-        new Produccion("sentencia", new List<string> { "sent-assign" }),
-        new Produccion("sentencia", new List<string> { "sent-read" }),
-        new Produccion("sentencia", new List<string> { "sent-write" }),
-        new Produccion("sent-if", new List<string> { "if", "exp", "then", "secuencia-sent", "end" }),
-        new Produccion("sent-if", new List<string> { "if", "exp", "then", "secuencia-sent", "else", "secuencia-sent", "end" }),
-        new Produccion("sent-repeat", new List<string> { "repeat", "secuencia-sent", "until", "exp" }),
-        new Produccion("sent-assign", new List<string> { "identificador", ":=", "exp" }),
-        new Produccion("sent-read", new List<string> { "read", "identificador" }),
-        new Produccion("sent-write", new List<string> { "write", "exp" }),
-        new Produccion("exp", new List<string> { "exp-simple", "op-comp", "exp-simple" }),
-        new Produccion("exp", new List<string> { "exp-simple" }),
-        new Produccion("op-comp", new List<string> { "<" }),
-        new Produccion("op-comp", new List<string> { ">" }),
-        new Produccion("op-comp", new List<string> { "=" }),
-        new Produccion("exp-simple", new List<string> { "exp-simple", "opsuma", "term" }),
-        new Produccion("exp-simple", new List<string> { "term" }),
-        new Produccion("opsuma", new List<string> { "+" }),
-        new Produccion("opsuma", new List<string> { "-" }),
-        new Produccion("term", new List<string> { "term", "opmult", "factor" }),
-        new Produccion("term", new List<string> { "factor" }),
-        new Produccion("opmult", new List<string> { "*" }),
-        new Produccion("opmult", new List<string> { "/" }),
-        new Produccion("factor", new List<string> { "(", "exp", ")" }),
-        new Produccion("factor", new List<string> { "numero" }),
-        new Produccion("factor", new List<string> { "identificador" }),
-    };
+        {
+            new Produccion("programa'", new List<string> { "programa" }),
+            new Produccion("programa", new List<string> { "secuencia-sent" }),
+            new Produccion("secuencia-sent", new List<string> { "secuencia-sent", ";", "sentencia" }),
+            new Produccion("secuencia-sent", new List<string> { "sentencia" }),
+            new Produccion("sentencia", new List<string> { "sent-if" }),
+            new Produccion("sentencia", new List<string> { "sent-repeat" }),
+            new Produccion("sentencia", new List<string> { "sent-assign" }),
+            new Produccion("sentencia", new List<string> { "sent-read" }),
+            new Produccion("sentencia", new List<string> { "sent-write" }),
+            new Produccion("sent-if", new List<string> { "if", "exp", "then", "secuencia-sent", "end" }),
+            new Produccion("sent-if", new List<string> { "if", "exp", "then", "secuencia-sent", "else", "secuencia-sent", "end" }),
+            new Produccion("sent-repeat", new List<string> { "repeat", "secuencia-sent", "until", "exp" }),
+            new Produccion("sent-assign", new List<string> { "identificador", ":=", "exp" }),
+            new Produccion("sent-read", new List<string> { "read", "identificador" }),
+            new Produccion("sent-write", new List<string> { "write", "exp" }),
+            new Produccion("exp", new List<string> { "exp-simple", "op-comp", "exp-simple" }),
+            new Produccion("exp", new List<string> { "exp-simple" }),
+            new Produccion("op-comp", new List<string> { "<" }),
+            new Produccion("op-comp", new List<string> { ">" }),
+            new Produccion("op-comp", new List<string> { "=" }),
+            new Produccion("exp-simple", new List<string> { "exp-simple", "opsuma", "term" }),
+            new Produccion("exp-simple", new List<string> { "term" }),
+            new Produccion("opsuma", new List<string> { "+" }),
+            new Produccion("opsuma", new List<string> { "-" }),
+            new Produccion("term", new List<string> { "term", "opmult", "factor" }),
+            new Produccion("term", new List<string> { "factor" }),
+            new Produccion("opmult", new List<string> { "*" }),
+            new Produccion("opmult", new List<string> { "/" }),
+            new Produccion("factor", new List<string> { "(", "exp", ")" }),
+            new Produccion("factor", new List<string> { "numero" }),
+            new Produccion("factor", new List<string> { "identificador" }),
+        };
 
             // Construir autómata
             LR0Parser parser = new LR0Parser(gramaticaTINY);
@@ -1054,6 +1054,98 @@ namespace Proyecto_Compiladores
                     if (elem.Punto < elem.Produccion.Derecha.Count)
                         simbolos.Add(elem.Produccion.Derecha[elem.Punto]);
                 }
+            }
+
+            //************** Llenado de Ir_A y ACCION *******************
+            
+            // Limpia las tablas existentes
+            dataGridViewAccion.Rows.Clear();
+            dataGridViewAccion.Columns.Clear();
+            dataGridViewIrA.Rows.Clear();
+            dataGridViewIrA.Columns.Clear();
+
+            // Configura columnas iniciales
+            dataGridViewAccion.Columns.Add("Estados", "Estados");
+            dataGridViewIrA.Columns.Add("Estados", "Estados");
+
+            // Determina terminales y no terminales desde la gramática
+            HashSet<string> noTerminales = new HashSet<string>(gramaticaTINY.Select(p => p.Izquierda));
+            HashSet<string> terminales = new HashSet<string>();
+
+            foreach (var prod in gramaticaTINY)
+            {
+                foreach (var simbolo in prod.Derecha)
+                {
+                    if (!noTerminales.Contains(simbolo) && simbolo != "")
+                        terminales.Add(simbolo);
+                }
+            }
+            
+
+            // Agrega columnas para terminales en ACCIÓN
+            foreach (string t in terminales)
+            {
+                dataGridViewAccion.Columns.Add(t, t);
+            }
+
+            // Agrega columnas para no terminales en IR_A
+            foreach (string nt in noTerminales.Where(x => x != "A'"))
+            {
+                dataGridViewIrA.Columns.Add(nt, nt);
+            }
+
+            // Itera sobre los estados del autómata
+            for (int i = 0; i < estados.Count; i++)
+            {
+                List<string> filaAccion = new List<string> { $"I{i}" };
+                List<string> filaIrA = new List<string> { $"I{i}" };
+
+                // === ACCIÓN ===
+                foreach (string t in terminales)
+                {
+                    var destino = parser.Goto(estados[i], t);
+                    int idx = estados.FindIndex(est => est.Count == destino.Count && !est.Except(destino).Any());
+
+                    if (idx != -1)
+                    {
+                        filaAccion.Add($"d{idx}");
+                    }
+                    else
+                    {
+                        // Solo aplicar reducción si no hay desplazamiento para este terminal
+                        var reducibles = estados[i].Where(elem => elem.Punto == elem.Produccion.Derecha.Count).ToList();
+                        if (reducibles.Any())
+                        {
+                            var r = reducibles[0];
+                            if (r.Produccion.Izquierda == "programa'")
+                                filaAccion.Add(t == "$" ? "Aceptar" : "");
+                            else
+                            {
+                                int prodNum = gramaticaTINY.FindIndex(p =>
+                                    p.Izquierda == r.Produccion.Izquierda &&
+                                    p.Derecha.SequenceEqual(r.Produccion.Derecha));
+                                filaAccion.Add($"r{prodNum}");
+                            }
+                        }
+                        else
+                        {
+                            filaAccion.Add("");
+                        }
+                    }
+
+                }
+
+                // === IR_A ===
+                foreach (string nt in noTerminales.Where(x => x != "A'"))
+                {
+                    var destino = parser.Goto(estados[i], nt);
+                    int idx = estados.FindIndex(est => est.Count == destino.Count && !est.Except(destino).Any());
+                    filaIrA.Add(idx != -1 ? idx.ToString() : "");
+                }
+
+                // Añadir filas a los DataGridView
+                dataGridViewAccion.Rows.Add(filaAccion.ToArray());
+                dataGridViewIrA.Rows.Add(filaIrA.ToArray());
             }
 
             var listaSimbolos = simbolos.OrderBy(s => s).ToList();
