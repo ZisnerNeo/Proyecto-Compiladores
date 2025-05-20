@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Text;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -11,6 +12,42 @@ namespace Proyecto_Compiladores
 {
     public partial class Form1 : Form
     {
+
+        bool band = false;
+        List<Produccion> gramaticaTINY = new List<Produccion>
+        {
+            new Produccion("programa'", new List<string> { "programa" }),
+            new Produccion("programa", new List<string> { "secuencia-sent" }),
+            new Produccion("secuencia-sent", new List<string> { "secuencia-sent", ";", "sentencia" }),
+            new Produccion("secuencia-sent", new List<string> { "sentencia" }),
+            new Produccion("sentencia", new List<string> { "sent-if" }),
+            new Produccion("sentencia", new List<string> { "sent-repeat" }),
+            new Produccion("sentencia", new List<string> { "sent-assign" }),
+            new Produccion("sentencia", new List<string> { "sent-read" }),
+            new Produccion("sentencia", new List<string> { "sent-write" }),
+            new Produccion("sent-if", new List<string> { "if", "exp", "then", "secuencia-sent", "end" }),
+            new Produccion("sent-if", new List<string> { "if", "exp", "then", "secuencia-sent", "else", "secuencia-sent", "end" }),
+            new Produccion("sent-repeat", new List<string> { "repeat", "secuencia-sent", "until", "exp" }),
+            new Produccion("sent-assign", new List<string> { "identificador", ":=", "exp" }),
+            new Produccion("sent-read", new List<string> { "read", "identificador" }),
+            new Produccion("sent-write", new List<string> { "write", "exp" }),
+            new Produccion("exp", new List<string> { "exp-simple", "op-comp", "exp-simple" }),
+            new Produccion("exp", new List<string> { "exp-simple" }),
+            new Produccion("op-comp", new List<string> { "<" }),
+            new Produccion("op-comp", new List<string> { ">" }),
+            new Produccion("op-comp", new List<string> { "=" }),
+            new Produccion("exp-simple", new List<string> { "exp-simple", "opsuma", "term" }),
+            new Produccion("exp-simple", new List<string> { "term" }),
+            new Produccion("opsuma", new List<string> { "+" }),
+            new Produccion("opsuma", new List<string> { "-" }),
+            new Produccion("term", new List<string> { "term", "opmult", "factor" }),
+            new Produccion("term", new List<string> { "factor" }),
+            new Produccion("opmult", new List<string> { "*" }),
+            new Produccion("opmult", new List<string> { "/" }),
+            new Produccion("factor", new List<string> { "(", "exp", ")" }),
+            new Produccion("factor", new List<string> { "numero" }),
+            new Produccion("factor", new List<string> { "identificador" }),
+        };
 
 
         private readonly Dictionary<char, int> operador;
@@ -653,9 +690,7 @@ namespace Proyecto_Compiladores
         {
             Valida.Text = " ";
         }
-
-        //Clasificacion de Lexemas 
-        private void clasificaTokenBtn_Click(object sender, EventArgs e)
+        private void ClasificaTokens_Click(object sender, EventArgs e)
         {
             ERRORLINE.Text = "";
             string texto = tokensTxt.Text; // Entra el codigo 
@@ -717,6 +752,97 @@ namespace Proyecto_Compiladores
                 else
                     celda.Style.ForeColor = Color.Green;
             }
+        }
+        //Clasificacion de Lexemas 
+        private void clasificaTokenBtn_Click(object sender, EventArgs e)
+        {
+            ERRORLINE.Text = "";
+            string texto = tokensTxt.Text; // Entra el codigo 
+            string idPosfija = ConvertToPostfix(ConvierteExplicita(identificadorTxt.Text));
+            AFN automataID = ConvertToAFN(idPosfija);
+            string idNUM = ConvertToPostfix(ConvierteExplicita(NumeroTxt.Text));
+            AFN automataNum = ConvertToAFN(idNUM);
+            ERRORLINE.Visible = false;
+            ERROR.Visible = false;
+            errorlexico = false;
+            // Obtener tokens
+            string[] palabras = texto.Split(new char[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+
+            List<string> listaPalabras = new List<string>(palabras);
+            int i = 0;
+            DataTable tablaTokens = new DataTable();
+            tablaTokens.Columns.Add("Nombre");
+            tablaTokens.Columns.Add("Token");
+
+
+
+
+            foreach (string token in listaPalabras)
+            {
+
+                if (palabraReservada.ContainsKey(token))
+                {
+                    tablaTokens.Rows.Add(token, token);
+                }
+                else if (simbolosEspeciales.ContainsKey(token))
+                {
+                    tablaTokens.Rows.Add(token, token);
+                }
+                else if (COMPRUEBALEXEMA(token.ToCharArray(), 0, 0, 1, automataID))
+                {
+                    tablaTokens.Rows.Add(token, "identificador");
+                }
+                else if (COMPRUEBALEXEMA(token.ToCharArray(), 0, 0, 1, automataNum))
+                {
+                    tablaTokens.Rows.Add(token, "numero");
+                }
+                else
+                {
+                    errorlexico = true;
+                    tablaTokens.Rows.Add(token, "error");
+                    //ERRORLINEA(i);
+                    int linea = ObtenerLineaDeToken(i, texto);
+                    richTextBoxErrores.SelectionStart = richTextBoxErrores.TextLength;
+                    richTextBoxErrores.SelectionLength = 0;
+                    richTextBoxErrores.SelectionColor = Color.Red;
+                    richTextBoxErrores.AppendText($"Línea {linea}: '{token}' no se reconoce.\n");
+                    richTextBoxErrores.SelectionColor = richTextBoxErrores.ForeColor; // Restablece color
+
+                }
+                i++;
+            }
+            dataGridviewTokens.DataSource = tablaTokens;
+
+            foreach (DataGridViewRow fila in dataGridviewTokens.Rows)
+            {
+                // Obtener la celda de la segunda columna
+                DataGridViewCell celda = fila.Cells[1]; // Índice de la segunda columna
+
+                // Verificar si la celda contiene el texto "error" y establecer el color de fondo correspondiente
+                if (celda.Value != null && celda.Value.ToString().Equals("error", StringComparison.OrdinalIgnoreCase))
+                {
+                    celda.Style.ForeColor = Color.Red;
+                }
+                else
+                    celda.Style.ForeColor = Color.Green;
+            }
+            //Implementacion Arbol
+            // Obtener tokens clasificados
+            List<string> tokens = new List<string>();
+            foreach (DataGridViewRow fila in dataGridviewTokens.Rows)
+            {
+                if (fila.Cells[1].Value != null && fila.Cells[1].Value.ToString() != "error")
+                {
+                    tokens.Add(fila.Cells[1].Value.ToString());
+                }
+            }
+
+            // Reconstruir parser y autómata LR(0)
+            LR0Parser parser = new LR0Parser(gramaticaTINY);
+            List<List<ElementoLR0>> estados = parser.ConstruirAutomataLR0();
+
+            ConstruirArbolSintactico(tokens, parser, estados);
+
         }
 
         private string ConvierteExplicita(string ER)
@@ -1002,40 +1128,7 @@ namespace Proyecto_Compiladores
         private void LR0Boton_Click(object sender, EventArgs e)
         {
             // Cargar gramática actualizada
-            List<Produccion> gramaticaTINY = new List<Produccion>
-        {
-            new Produccion("programa'", new List<string> { "programa" }),
-            new Produccion("programa", new List<string> { "secuencia-sent" }),
-            new Produccion("secuencia-sent", new List<string> { "secuencia-sent", ";", "sentencia" }),
-            new Produccion("secuencia-sent", new List<string> { "sentencia" }),
-            new Produccion("sentencia", new List<string> { "sent-if" }),
-            new Produccion("sentencia", new List<string> { "sent-repeat" }),
-            new Produccion("sentencia", new List<string> { "sent-assign" }),
-            new Produccion("sentencia", new List<string> { "sent-read" }),
-            new Produccion("sentencia", new List<string> { "sent-write" }),
-            new Produccion("sent-if", new List<string> { "if", "exp", "then", "secuencia-sent", "end" }),
-            new Produccion("sent-if", new List<string> { "if", "exp", "then", "secuencia-sent", "else", "secuencia-sent", "end" }),
-            new Produccion("sent-repeat", new List<string> { "repeat", "secuencia-sent", "until", "exp" }),
-            new Produccion("sent-assign", new List<string> { "identificador", ":=", "exp" }),
-            new Produccion("sent-read", new List<string> { "read", "identificador" }),
-            new Produccion("sent-write", new List<string> { "write", "exp" }),
-            new Produccion("exp", new List<string> { "exp-simple", "op-comp", "exp-simple" }),
-            new Produccion("exp", new List<string> { "exp-simple" }),
-            new Produccion("op-comp", new List<string> { "<" }),
-            new Produccion("op-comp", new List<string> { ">" }),
-            new Produccion("op-comp", new List<string> { "=" }),
-            new Produccion("exp-simple", new List<string> { "exp-simple", "opsuma", "term" }),
-            new Produccion("exp-simple", new List<string> { "term" }),
-            new Produccion("opsuma", new List<string> { "+" }),
-            new Produccion("opsuma", new List<string> { "-" }),
-            new Produccion("term", new List<string> { "term", "opmult", "factor" }),
-            new Produccion("term", new List<string> { "factor" }),
-            new Produccion("opmult", new List<string> { "*" }),
-            new Produccion("opmult", new List<string> { "/" }),
-            new Produccion("factor", new List<string> { "(", "exp", ")" }),
-            new Produccion("factor", new List<string> { "numero" }),
-            new Produccion("factor", new List<string> { "identificador" }),
-        };
+            
 
             // Construir autómata
             LR0Parser parser = new LR0Parser(gramaticaTINY);
@@ -1100,7 +1193,7 @@ namespace Proyecto_Compiladores
                 List<string> filaAccion = new List<string> { $"I{i}" };
                 List<string> filaIrA = new List<string> { $"I{i}" };
 
-                // === ACCIÓN ===
+                // === ACCIÓN (CORREGIDA) ===
                 foreach (string t in terminales)
                 {
                     var destino = parser.Goto(estados[i], t);
@@ -1112,28 +1205,43 @@ namespace Proyecto_Compiladores
                     }
                     else
                     {
-                        // Solo aplicar reducción si no hay desplazamiento para este terminal
+                        // Revisión de posibles reducciones
                         var reducibles = estados[i].Where(elem => elem.Punto == elem.Produccion.Derecha.Count).ToList();
-                        if (reducibles.Any())
+                        string accion = "";
+
+                        foreach (var r in reducibles)
                         {
-                            var r = reducibles[0];
                             if (r.Produccion.Izquierda == "programa'")
-                                filaAccion.Add(t == "$" ? "Aceptar" : "");
+                            {
+                                if (t == "$")
+                                {
+                                    accion = "Aceptar";
+                                    break;
+                                }
+                            }
                             else
                             {
                                 int prodNum = gramaticaTINY.FindIndex(p =>
                                     p.Izquierda == r.Produccion.Izquierda &&
                                     p.Derecha.SequenceEqual(r.Produccion.Derecha));
-                                filaAccion.Add($"r{prodNum}");
+
+                                if (string.IsNullOrEmpty(accion))
+                                {
+                                    accion = $"r{prodNum}";
+                                }
+                                else if (accion != $"r{prodNum}")
+                                {
+                                    // Conflicto reducción-reducción (solo marcamos)
+                                    accion = "conflicto";
+                                    break;
+                                }
                             }
                         }
-                        else
-                        {
-                            filaAccion.Add("");
-                        }
-                    }
 
+                        filaAccion.Add(accion);
+                    }
                 }
+
 
                 // === IR_A ===
                 foreach (string nt in noTerminales.Where(x => x != "A'"))
@@ -1180,5 +1288,139 @@ namespace Proyecto_Compiladores
             MessageBox.Show($"Generados {estados.Count} estados.", "Éxito");
         }
 
+        private void ConstruirArbolSintactico(List<string> tokens, LR0Parser parser, List<List<ElementoLR0>> estados)
+        {
+            TreeView treeViewSintactico = treeViewLR0; // Usa el TreeView ya presente
+            treeViewSintactico.Nodes.Clear();
+
+            Stack<int> pilaEstados = new Stack<int>();
+            Stack<TreeNode> pilaNodos = new Stack<TreeNode>();
+            pilaEstados.Push(0);
+
+            tokens.Add("$"); // Fin de cadena
+            int indiceToken = 0;
+
+            while (true)
+            {
+                string tokenActual = tokens[indiceToken];
+                int estadoActual = pilaEstados.Peek();
+
+                // Buscar columna correspondiente en tabla ACCION
+                int colIndex = -1;
+                for (int i = 1; i < dataGridViewAccion.Columns.Count; i++)
+                {
+                    if (dataGridViewAccion.Columns[i].Name == tokenActual)
+                    {
+                        colIndex = i;
+                        break;
+                    }
+                }
+
+                if (colIndex == -1)
+                {
+                    MessageBox.Show($"Token no reconocido: {tokenActual}", "Error sintáctico", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    break;
+                }
+
+                string accion = dataGridViewAccion.Rows[estadoActual].Cells[colIndex].Value?.ToString();
+
+                if (string.IsNullOrEmpty(accion))
+                {
+                    richTextBoxErrores.SelectionStart = richTextBoxErrores.TextLength;
+                    richTextBoxErrores.SelectionLength = 0;
+                    richTextBoxErrores.SelectionColor = Color.Red;
+                    richTextBoxErrores.AppendText("Se detectó un error sintáctico en el programa.\n");
+                    richTextBoxErrores.SelectionColor = richTextBoxErrores.ForeColor;
+                }
+
+
+                if (accion.StartsWith("d")) // Desplazar
+                {
+                    int nuevoEstado = int.Parse(accion.Substring(1));
+                    pilaEstados.Push(nuevoEstado);
+                    pilaNodos.Push(new TreeNode(tokenActual));
+                    indiceToken++;
+                }
+                else if (accion.StartsWith("r")) // Reducir
+                {
+                    int numProduccion = int.Parse(accion.Substring(1));
+                    Produccion prod = parser.ObtenerProduccion(numProduccion);
+                    int betaLength = prod.Derecha.Count;
+
+                    List<TreeNode> hijos = new List<TreeNode>();
+
+                    for (int i = 0; i < betaLength; i++)
+                    {
+                        pilaEstados.Pop();
+                        hijos.Insert(0, pilaNodos.Pop());
+                    }
+
+                    // Buscar estado destino en tabla IrA
+                    int estadoGoto = pilaEstados.Peek();
+                    int colIrA = -1;
+                    for (int i = 1; i < dataGridViewIrA.Columns.Count; i++)
+                    {
+                        if (dataGridViewIrA.Columns[i].Name == prod.Izquierda)
+                        {
+                            colIrA = i;
+                            break;
+                        }
+                    }
+
+                    string irAvalor = dataGridViewIrA.Rows[estadoGoto].Cells[colIrA].Value?.ToString();
+                    if (string.IsNullOrEmpty(irAvalor))
+                    {
+                        MessageBox.Show("Error en tabla IrA", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                    }
+
+                    pilaEstados.Push(int.Parse(irAvalor));
+
+                    TreeNode nodoPadre = new TreeNode(prod.Izquierda);
+                    foreach (var hijo in hijos)
+                        nodoPadre.Nodes.Add(hijo);
+
+                    pilaNodos.Push(nodoPadre);
+                }
+                else if (accion.ToLower() == "aceptar")
+                {
+                    treeViewSintactico.Nodes.Add(pilaNodos.Pop());
+                    treeViewSintactico.ExpandAll();
+                    MessageBox.Show("Análisis sintáctico correcto", "Éxito");
+                    break;
+                }
+                else
+                {
+                    MessageBox.Show($"Acción no reconocida: {accion}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    break;
+                }
+            }
+        }
+        private int ObtenerLineaDeToken(int tokenIndex, string texto)
+        {
+            string[] lineas = texto.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+            int contadorTokens = 0;
+
+            for (int i = 0; i < lineas.Length; i++)
+            {
+                var tokensEnLinea = lineas[i].Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                contadorTokens += tokensEnLinea.Length;
+                if (tokenIndex < contadorTokens)
+                    return i + 1;
+            }
+            return -1;
+        }
+
+        private void button4_Click(object sender, EventArgs e) //Correr todo el programa Tiny
+        {
+            richTextBoxErrores.Clear();
+            if (band == false) { 
+            LR0Boton_Click(sender,e);
+            band = true;
+            }
+            clasificaTokenBtn_Click(sender, e);
+        }
+
+        
     }
 }

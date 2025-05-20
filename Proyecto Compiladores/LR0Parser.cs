@@ -81,7 +81,10 @@ namespace Proyecto_Compiladores
         {
             return producciones.Where(p => p.Izquierda == noTerminal).ToList();
         }
-
+        public Produccion ObtenerProduccion(int index)
+        {
+            return producciones[index];
+        }
         public bool EsNoTerminal(string simbolo)
         {
             return producciones.Any(p => p.Izquierda == simbolo);
